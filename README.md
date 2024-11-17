@@ -1,3 +1,16 @@
+# ⚠️ AI-Generated Fork Disclaimer
+
+**WARNING: This is an experimental fork of Gmail Desktop with AI-generated modifications that have not been manually reviewed. Use at your own risk.**
+
+This fork includes:
+- Updated Electron to version 27.1.0
+- Updated User Agent strings to Firefox 132.0
+- AI-generated code modifications that have not been manually reviewed or tested thoroughly
+
+**⚠️ Security Notice**: Due to the automated nature of the modifications and lack of manual code review, this fork may contain security vulnerabilities or bugs. It is not recommended for production use.
+
+**Note**: This fork uses the `develop` branch as the primary branch.
+
 <div align="center">
 	<img src="media/icon.svg" width="200" height="200">
 	<h1>Gmail Desktop</h1>
@@ -194,3 +207,4 @@ This project follows the [all-contributors](https://github.com/all-contributors/
 ## Disclaimer
 
 Gmail Desktop is a third-party app and not affiliated with Google.
+

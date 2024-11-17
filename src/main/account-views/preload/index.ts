@@ -46,13 +46,21 @@ window.addEventListener('load', () => {
 })
 
 // Toggle a custom style class when a message is received from the main process
-ipc.on('set-custom-style', (_: Event, key: ConfigKey, enabled: boolean) => {
+function setCustomStyle(key: ConfigKey, enabled: boolean) {
   document.body.classList[enabled ? 'add' : 'remove'](key)
-})
+}
 
 // Toggle a full screen class when a message is received from the main process
-ipc.on('set-full-screen', (_: Event, enabled: boolean) => {
+function setFullScreen(enabled: boolean) {
   document.body.classList[enabled ? 'add' : 'remove']('full-screen')
+}
+
+ipc.on('set-custom-style', (event: Electron.IpcRendererEvent, key: ConfigKey, enabled: boolean) => {
+  setCustomStyle(key, enabled)
+})
+
+ipc.on('set-full-screen', (event: Electron.IpcRendererEvent, enabled: boolean) => {
+  setFullScreen(enabled)
 })
 
 ipc.on('burger-menu:set-offset', (_event, isOffset: boolean) => {

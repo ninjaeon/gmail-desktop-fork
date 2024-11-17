@@ -178,11 +178,14 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
 
   initBlocker(accountSession)
 
+  const preloadPath = path.join(__dirname, 'preload', 'account-view.js')
   const accountView = new BrowserView({
     webPreferences: {
       partition: sessionPartitionKey,
-      preload: path.join(__dirname, 'preload', 'account-view.js'),
-      nativeWindowOpen: true
+      preload: preloadPath,
+      contextIsolation: false,
+      nodeIntegration: true,
+      webviewTag: true
     }
   })
 
@@ -308,4 +311,12 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
       openExternalUrl(url)
     }
   )
+
+  accountView.webContents.on('did-create-window', (event, url, frameName, options) => {
+    handleWindowCreation(event, url, frameName, options)
+  })
+}
+
+function handleWindowCreation(event, url, frameName, options) {
+  // Handle window creation
 }
