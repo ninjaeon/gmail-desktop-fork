@@ -6,35 +6,17 @@ on:
       - "v*"
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Gmail Desktop ${{ github.ref_name }}
-          draft: false
-          prerelease: false
-
   build:
-    needs: create-release
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            dist-target: 'macos'
           - os: ubuntu-latest
-            dist-target: 'linux'
+            dist-target: linux
+          - os: macos-latest
+            dist-target: macos
           - os: windows-latest
-            dist-target: 'windows'
-      fail-fast: false
+            dist-target: windows
+    runs-on: ${{ matrix.os }}
     steps:
       - if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install --no-install-recommends -y libarchive-tools
