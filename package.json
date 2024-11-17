@@ -4,7 +4,10 @@
   "version": "3.0.0-fork.01",
   "description": "Nifty Gmail desktop app",
   "private": true,
-  "repository": "timche/gmail-desktop",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ninjaeon/gmail-desktop-fork.git"
+  },
   "author": "Tim Cheung <tim@cheung.io>",
   "license": "MIT",
   "main": "build-js/main/index.js",
@@ -165,8 +168,13 @@
     ],
     "appId": "io.cheung.gmail-desktop",
     "mac": {
-      "category": "public.app-category.productivity",
-      "darkModeSupport": true
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
     },
     "linux": {
       "target": [
@@ -181,11 +189,12 @@
       "target": [
         "nsis",
         "zip"
-      ],
-      "sign": false
+      ]
     },
     "publish": {
       "provider": "github",
+      "owner": "ninjaeon",
+      "repo": "gmail-desktop-fork",
       "releaseType": "release"
     }
   }
