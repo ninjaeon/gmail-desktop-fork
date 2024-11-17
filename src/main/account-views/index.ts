@@ -7,10 +7,7 @@ import {
 } from './custom-styles'
 import { enableAutoFixUserAgent } from '../user-agent'
 import { getMainWindow } from '../main-window'
-import {
-  getSelectedAccount,
-  isDefaultAccount
-} from '../accounts'
+import { getSelectedAccount, isDefaultAccount } from '../accounts'
 import {
   topElementHeight,
   gmailUrl,
