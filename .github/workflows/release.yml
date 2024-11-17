@@ -43,10 +43,13 @@ jobs:
       - uses: actions/checkout@v4
       - run: npm ci
       - run: npm run build
-      - run: npm run dist:${{ matrix.dist-target }} -- --publish always
+      - name: Build and publish
+        run: npm run dist:${{ matrix.dist-target }} -- --publish always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          # Disable code signing for Windows builds
+          CSC_IDENTITY_AUTO_DISCOVERY: false

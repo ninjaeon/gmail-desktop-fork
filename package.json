@@ -181,7 +181,8 @@
       "target": [
         "nsis",
         "zip"
-      ]
+      ],
+      "sign": false
     },
     "publish": {
       "provider": "github",
