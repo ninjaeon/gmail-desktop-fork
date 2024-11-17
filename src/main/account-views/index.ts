@@ -1,16 +1,15 @@
-import * as path from 'path'
 import { BrowserView, BrowserWindow, dialog, session } from 'electron'
+import * as path from 'path'
 import {
   addCustomCSS,
   initCustomStyles,
   setBurgerMenuOffset
 } from './custom-styles'
 import { enableAutoFixUserAgent } from '../user-agent'
-import { getMainWindow, sendToMainWindow } from '../main-window'
+import { getMainWindow } from '../main-window'
 import {
   getSelectedAccount,
-  isDefaultAccount,
-  selectAccount
+  isDefaultAccount
 } from '../accounts'
 import {
   topElementHeight,
@@ -125,28 +124,6 @@ export function removeAccountView(accountId: string) {
   accountViews.delete(accountId)
 
   updateAllAccountViewBounds()
-}
-
-export function hideAccountViews() {
-  const mainWindow = getMainWindow()
-
-  for (const [_accountId, accountView] of accountViews) {
-    mainWindow.removeBrowserView(accountView)
-  }
-}
-
-export function showAccountViews() {
-  const mainWindow = getMainWindow()
-
-  for (const [_accountId, accountView] of accountViews) {
-    mainWindow.addBrowserView(accountView)
-  }
-
-  const selectedAccount = getSelectedAccount()
-
-  if (selectedAccount) {
-    selectAccountView(selectedAccount.id)
-  }
 }
 
 export function getSelectedAccountView() {
@@ -283,7 +260,7 @@ function handleWindowCreation(
   _frameName: string,
   options: Electron.BrowserWindowConstructorOptions
 ) {
-  const newWindow = new BrowserWindow({
+  return new BrowserWindow({
     ...options,
     webPreferences: {
       ...options.webPreferences,
@@ -291,4 +268,23 @@ function handleWindowCreation(
       contextIsolation: true
     }
   })
+}
+
+export function hideAccountViews() {
+  const mainWindow = getMainWindow()
+  for (const [_accountId, accountView] of accountViews) {
+    mainWindow.removeBrowserView(accountView)
+  }
+}
+
+export function showAccountViews() {
+  const mainWindow = getMainWindow()
+  for (const [_accountId, accountView] of accountViews) {
+    mainWindow.addBrowserView(accountView)
+  }
+
+  const selectedAccount = getSelectedAccount()
+  if (selectedAccount) {
+    selectAccountView(selectedAccount.id)
+  }
 }
