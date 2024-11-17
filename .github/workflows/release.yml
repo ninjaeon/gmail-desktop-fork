@@ -1,11 +1,28 @@
 name: Release
 on:
-  release:
-    types:
-      - prereleased
-      - released
+  push:
+    tags:
+      - 'v*'
+
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Gmail Desktop ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
   build:
+    needs: create-release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -18,11 +35,6 @@ jobs:
             dist-target: 'windows'
       fail-fast: false
     steps:
-      - uses: fountainhead/action-wait-for-check@v1.0.0
-        with:
-          ref: ${{ github.sha }}
-          checkName: test
-          token: ${{ secrets.GITHUB_TOKEN }}
       - if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install --no-install-recommends -y libarchive-tools
       - uses: actions/setup-node@v4
