@@ -55,11 +55,11 @@ function setFullScreen(enabled: boolean) {
   document.body.classList[enabled ? 'add' : 'remove']('full-screen')
 }
 
-ipc.on('set-custom-style', (event: Electron.IpcRendererEvent, key: ConfigKey, enabled: boolean) => {
+ipc.on('set-custom-style', (_event: Electron.IpcRendererEvent, key: ConfigKey, enabled: boolean) => {
   setCustomStyle(key, enabled)
 })
 
-ipc.on('set-full-screen', (event: Electron.IpcRendererEvent, enabled: boolean) => {
+ipc.on('set-full-screen', (_event: Electron.IpcRendererEvent, enabled: boolean) => {
   setFullScreen(enabled)
 })
 

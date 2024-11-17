@@ -251,72 +251,44 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
   })
 
   accountView.webContents.on(
-    'new-window',
-    // eslint-disable-next-line max-params
-    (event: any, url, _1, _2, options) => {
+    'new-window' as any,
+    (
+      event: Electron.Event,
+      url: string,
+      _1: any,
+      _2: any,
+      options: Electron.BrowserWindowConstructorOptions
+    ) => {
       event.preventDefault()
-
-      // `Add account` opens `accounts.google.com`
-      if (url.startsWith(googleAccountsUrl)) {
-        sendToMainWindow('add-account-request')
-        hideAccountViews()
-        return
-      }
-
-      if (url.startsWith(gmailUrl)) {
-        selectAccount(accountId)
-
-        // Center the new window on the screen
-        event.newGuest = new BrowserWindow({
-          ...options,
-          titleBarStyle: 'default',
-          x: undefined,
-          y: undefined
-        })
-
-        event.newGuest.webContents.on('dom-ready', () => {
-          addCustomCSS(event.newGuest)
-        })
-
-        event.newGuest.webContents.on(
-          'new-window',
-          (event: Event, url: string) => {
-            event.preventDefault()
-            openExternalUrl(url)
-          }
-        )
-
-        // Workaround for dark mode initialization
-        event.newGuest.webContents.send('account-selected')
-
-        return
-      }
-
-      if (url.startsWith('about:blank')) {
-        const win = new BrowserWindow({
-          ...options,
-          show: false
-        })
-
-        win.webContents.once('will-redirect', (_event, url) => {
-          openExternalUrl(url)
-          win.destroy()
-        })
-
-        event.newGuest = win
-
-        return
-      }
-
-      openExternalUrl(url)
+      handleWindowCreation(event, url, _1, options)
     }
   )
 
-  accountView.webContents.on('did-create-window', (event, url, frameName, options) => {
-    handleWindowCreation(event, url, frameName, options)
-  })
+  accountView.webContents.on(
+    'did-create-window' as any,
+    (
+      event: Electron.Event,
+      url: string,
+      frameName: string,
+      options: Electron.BrowserWindowConstructorOptions
+    ) => {
+      handleWindowCreation(event, url, frameName, options)
+    }
+  )
 }
 
-function handleWindowCreation(event, url, frameName, options) {
-  // Handle window creation
+function handleWindowCreation(
+  _event: Electron.Event,
+  _url: string,
+  _frameName: string,
+  options: Electron.BrowserWindowConstructorOptions
+) {
+  const newWindow = new BrowserWindow({
+    ...options,
+    webPreferences: {
+      ...options.webPreferences,
+      nodeIntegration: false,
+      contextIsolation: true
+    }
+  })
 }
