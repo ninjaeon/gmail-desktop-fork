@@ -11,10 +11,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v4
         with:
-          node-version: 14
-      - uses: actions/checkout@v2
+          node-version: 18
+      - uses: actions/checkout@v4
       - run: npm ci
       - run: npm run type-check
       - run: npm run lint
@@ -35,14 +35,14 @@ jobs:
     steps:
       - if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install --no-install-recommends -y libarchive-tools
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v4
         with:
-          node-version: 14
-      - uses: actions/checkout@v2
+          node-version: 18
+      - uses: actions/checkout@v4
       - run: npm ci
       - run: npm run build
       - run: npm run dist:${{ matrix.dist-target }} -- --publish never
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.repository.name }}-${{ matrix.dist-target }}
           path: |
