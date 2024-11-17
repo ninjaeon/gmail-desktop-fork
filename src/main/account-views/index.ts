@@ -206,65 +206,43 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     }
   })
 
+  accountView.webContents.on('will-navigate', (event, url) => {
+    // Allow navigation within Gmail
+    if (url.startsWith(gmailUrl) || url.startsWith(googleAccountsUrl)) {
+      return;
+    }
+    event.preventDefault();
+    openExternalUrl(url);
+  });
+
+  accountView.webContents.setWindowOpenHandler(({ url }) => {
+    openExternalUrl(url);
+    return { action: 'deny' };
+  });
+
   accountView.webContents.on('will-redirect', (event, url) => {
     // Sometimes Gmail is redirecting to the landing page instead of login.
     if (url.startsWith('https://www.google.com')) {
-      event.preventDefault()
+      event.preventDefault();
       accountView.webContents.loadURL(
         `${googleAccountsUrl}/ServiceLogin?service=mail&color_scheme=dark`
-      )
+      );
     }
 
     // Apply dark theme on login page
     if (url.startsWith(googleAccountsUrl)) {
-      event.preventDefault()
+      event.preventDefault();
       accountView.webContents.loadURL(
         `${url.replace('WebLiteSignIn', 'GlifWebSignIn')}&color_scheme=dark`
-      )
+      );
     }
-  })
+  });
 
-  accountView.webContents.on(
-    'new-window' as any,
-    (
-      event: Electron.Event,
-      url: string,
-      _1: any,
-      _2: any,
-      options: Electron.BrowserWindowConstructorOptions
-    ) => {
-      event.preventDefault()
-      handleWindowCreation(event, url, _1, options)
-    }
-  )
-
-  accountView.webContents.on(
-    'did-create-window' as any,
-    (
-      event: Electron.Event,
-      url: string,
-      frameName: string,
-      options: Electron.BrowserWindowConstructorOptions
-    ) => {
-      handleWindowCreation(event, url, frameName, options)
-    }
-  )
-}
-
-function handleWindowCreation(
-  _event: Electron.Event,
-  _url: string,
-  _frameName: string,
-  options: Electron.BrowserWindowConstructorOptions
-) {
-  return new BrowserWindow({
-    ...options,
-    webPreferences: {
-      ...options.webPreferences,
-      nodeIntegration: false,
-      contextIsolation: true
-    }
-  })
+  // Handle any remaining new window attempts
+  accountView.webContents.on('new-window', (event, url) => {
+    event.preventDefault();
+    openExternalUrl(url);
+  });
 }
 
 export function hideAccountViews() {

@@ -195,6 +195,13 @@ const config = new Store<TypedStore>({
         // @ts-expect-error
         store.delete('notificationsDisabled')
       }
+    },
+    '>3.0.0-fork.0': (store) => {
+      // Migration for fork version
+      const accounts = store.get(ConfigKey.Accounts)
+      if (Array.isArray(accounts)) {
+        store.set(ConfigKey.Accounts, accounts)
+      }
     }
   }
 })
