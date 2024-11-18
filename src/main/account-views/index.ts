@@ -115,9 +115,8 @@ export function removeAccountView(accountId: string) {
   const mainWindow = getMainWindow()
 
   mainWindow.removeBrowserView(accountView)
-  // `browserView.webContents.destroy()` is undocumented:
-  // https://github.com/electron/electron/issues/10096#issuecomment-774505246
-  // @ts-expect-error
+  // @ts-expect-error Electron's type definitions are incomplete for webContents.destroy
+  // This is used to prevent memory leaks
   accountView.webContents.destroy()
   session.fromPartition(`persist:${accountId}`).clearStorageData()
   accountViews.delete(accountId)
@@ -211,41 +210,41 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
   accountView.webContents.on('will-navigate', (event, url) => {
     // Allow navigation within Gmail
     if (url.startsWith(gmailUrl) || url.startsWith(googleAccountsUrl)) {
-      return;
+      return
     }
-    event.preventDefault();
-    openExternalUrl(url);
-  });
+    event.preventDefault()
+    openExternalUrl(url)
+  })
 
   accountView.webContents.setWindowOpenHandler(({ url }) => {
-    openExternalUrl(url);
-    return { action: 'deny' };
-  });
+    openExternalUrl(url)
+    return { action: 'deny' }
+  })
 
   accountView.webContents.on('will-redirect', (event, url) => {
     // Sometimes Gmail is redirecting to the landing page instead of login.
     if (url.startsWith('https://www.google.com')) {
-      event.preventDefault();
+      event.preventDefault()
       accountView.webContents.loadURL(
         `${googleAccountsUrl}/ServiceLogin?service=mail&color_scheme=dark`
-      );
+      )
     }
 
     // Apply dark theme on login page
     if (url.startsWith(googleAccountsUrl)) {
-      event.preventDefault();
+      event.preventDefault()
       accountView.webContents.loadURL(
         `${url.replace('WebLiteSignIn', 'GlifWebSignIn')}&color_scheme=dark`
-      );
+      )
     }
-  });
+  })
 
   // Handle any remaining new window attempts
-  // @ts-ignore
+  // @ts-expect-error Electron's type definitions are incomplete for webContents events
   accountView.webContents.on('new-window', (event, url) => {
-    event.preventDefault();
-    openExternalUrl(url);
-  });
+    event.preventDefault()
+    openExternalUrl(url)
+  })
 }
 
 export function hideAccountViews() {
