@@ -1,4 +1,4 @@
-import { BrowserView, dialog, session, Event, NewWindowEvent } from 'electron'
+import { BrowserView, dialog, session, Event } from 'electron'
 import * as path from 'path'
 import {
   addCustomCSS,
@@ -239,7 +239,7 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
   });
 
   // Handle any remaining new window attempts
-  accountView.webContents.addListener('new-window', (event: NewWindowEvent, url: string) => {
+  accountView.webContents.addListener('new-window', (event: Event, url: string) => {
     event.preventDefault();
     openExternalUrl(url);
   });
