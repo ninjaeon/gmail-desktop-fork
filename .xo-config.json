@@ -1,0 +1,46 @@
+{
+  "extends": "xo-react",
+  "envs": ["node", "browser"],
+  "prettier": true,
+  "space": true,
+  "rules": {
+    "unicorn/prevent-abbreviations": "off",
+    "unicorn/prefer-module": "off",
+    "unicorn/prefer-node-protocol": "off",
+    "unicorn/switch-case-braces": "off",
+    "unicorn/prefer-top-level-await": "off",
+    "unicorn/expiring-todo-comments": "off",
+    "@typescript-eslint/naming-convention": "off",
+    "@typescript-eslint/consistent-type-definitions": "off",
+    "@typescript-eslint/consistent-type-imports": "off",
+    "@typescript-eslint/ban-types": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-require-imports": "off",
+    "@typescript-eslint/return-await": "off",
+    "@typescript-eslint/no-unnecessary-type-assertion": "off",
+    "import/extensions": "off",
+    "import/no-cycle": "off",
+    "import/order": "off",
+    "n/prefer-global/process": "off",
+    "n/file-extension-in-import": "off",
+    "object-shorthand": "off",
+    "prettier/prettier": ["error", {
+      "endOfLine": "auto",
+      "trailingComma": "es5",
+      "tabWidth": 2,
+      "semi": true,
+      "singleQuote": true,
+      "useTabs": false,
+      "bracketSpacing": true
+    }]
+  },
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "out",
+    "*.config.js",
+    "*.config.ts",
+    "scripts/**/*",
+    "build/**/*"
+  ]
+}
