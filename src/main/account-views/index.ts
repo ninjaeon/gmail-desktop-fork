@@ -1,4 +1,4 @@
-import { BrowserView, dialog, session, Event } from 'electron'
+import { BrowserView, dialog, session } from 'electron'
 import * as path from 'path'
 import {
   addCustomCSS,
@@ -50,8 +50,10 @@ export function getHasMultipleAccounts() {
 export function sendToSelectedAccountView(channel: string, ...args: unknown[]) {
   const selectedAccount = getSelectedAccount()
   if (selectedAccount) {
-    const selectedView = getAccountView(selectedAccount.id)
-    selectedView.webContents.send(channel, ...args)
+    const selectedView = accountViews.get(selectedAccount.id)
+    if (selectedView) {
+      selectedView.webContents.send(channel, ...args)
+    }
   }
 }
 
@@ -177,12 +179,12 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
 
   accountView.webContents.loadURL(gmailUrl)
 
-  accountView.webContents.addListener('dom-ready', () => {
+  accountView.webContents.on('dom-ready', () => {
     addCustomCSS(accountView)
     initCustomStyles(accountView)
   })
 
-  accountView.webContents.addListener('did-finish-load', async () => {
+  accountView.webContents.on('did-finish-load', async () => {
     if (accountView.webContents.getURL().includes('signin/rejected')) {
       const { response } = await dialog.showMessageBox({
         type: 'info',
@@ -206,7 +208,7 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     }
   })
 
-  accountView.webContents.addListener('will-navigate', (event: Event, url: string) => {
+  accountView.webContents.on('will-navigate', (event, url) => {
     // Allow navigation within Gmail
     if (url.startsWith(gmailUrl) || url.startsWith(googleAccountsUrl)) {
       return;
@@ -220,7 +222,7 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     return { action: 'deny' };
   });
 
-  accountView.webContents.addListener('will-redirect', (event: Event, url: string) => {
+  accountView.webContents.on('will-redirect', (event, url) => {
     // Sometimes Gmail is redirecting to the landing page instead of login.
     if (url.startsWith('https://www.google.com')) {
       event.preventDefault();
@@ -239,7 +241,8 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
   });
 
   // Handle any remaining new window attempts
-  accountView.webContents.addListener('new-window', (event: Event, url: string) => {
+  // @ts-ignore
+  accountView.webContents.on('new-window', (event, url) => {
     event.preventDefault();
     openExternalUrl(url);
   });
