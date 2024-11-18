@@ -148,21 +148,21 @@ const config = new Store<TypedStore>({
   accessPropertiesByDotNotation: false,
   migrations: {
     '>=2.21.2': (store) => {
-      const hideRightSidebar = store.get(ConfigKey.HideRightSidebar)
+      const hideRightSidebar = store.get('hideRightSidebar')
 
       if (typeof hideRightSidebar === 'boolean') {
-        store.delete(ConfigKey.HideRightSidebar)
+        store.delete('hideRightSidebar' as keyof TypedStore)
       }
     },
     '>2.21.2': (store) => {
-      const overrideUserAgent = store.get(ConfigKey.OverrideUserAgent)
+      const overrideUserAgent = store.get('overrideUserAgent')
 
       if (typeof overrideUserAgent === 'string') {
         if (overrideUserAgent.length > 0) {
           store.set(ConfigKey.CustomUserAgent, overrideUserAgent)
         }
 
-        store.delete(ConfigKey.OverrideUserAgent)
+        store.delete('overrideUserAgent' as keyof TypedStore)
       }
     },
     '>3.0.0-alpha.2': (store) => {
@@ -173,19 +173,19 @@ const config = new Store<TypedStore>({
       }
     },
     '>3.0.0-alpha.15': (store) => {
-      const notificationsSilent = store.get('notificationsSilent')
+      const notificationsSilent = store.get('notificationsSilent' as keyof TypedStore)
 
       if (typeof notificationsSilent === 'boolean') {
         store.set(ConfigKey.NotificationsPlaySound, !notificationsSilent)
-        store.delete('notificationsSilent')
+        store.delete('notificationsSilent' as keyof TypedStore)
       }
     },
     '>3.0.0-alpha.20': (store) => {
-      const notificationsDisabled = store.get('notificationsDisabled')
+      const notificationsDisabled = store.get('notificationsDisabled' as keyof TypedStore)
 
       if (typeof notificationsDisabled === 'boolean') {
         store.set(ConfigKey.NotificationsEnabled, !notificationsDisabled)
-        store.delete('notificationsDisabled')
+        store.delete('notificationsDisabled' as keyof TypedStore)
       }
     },
     '>3.0.0-fork.0': (store) => {
