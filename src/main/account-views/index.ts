@@ -212,7 +212,9 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     if (url.startsWith(gmailUrl) || url.startsWith(googleAccountsUrl)) {
       return
     }
+
     event.preventDefault()
+
     openExternalUrl(url)
   })
 
@@ -225,6 +227,7 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     // Sometimes Gmail is redirecting to the landing page instead of login.
     if (url.startsWith('https://www.google.com')) {
       event.preventDefault()
+
       accountView.webContents.loadURL(
         `${googleAccountsUrl}/ServiceLogin?service=mail&color_scheme=dark`
       )
@@ -233,6 +236,7 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     // Apply dark theme on login page
     if (url.startsWith(googleAccountsUrl)) {
       event.preventDefault()
+
       accountView.webContents.loadURL(
         `${url.replace('WebLiteSignIn', 'GlifWebSignIn')}&color_scheme=dark`
       )
@@ -243,6 +247,7 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
   // @ts-expect-error Electron's type definitions are incomplete for webContents events
   accountView.webContents.on('new-window', (event, url) => {
     event.preventDefault()
+
     openExternalUrl(url)
   })
 }
