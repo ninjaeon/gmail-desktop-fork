@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, dialog, session } from 'electron'
+import { BrowserView, dialog, session, Event, NewWindowEvent } from 'electron'
 import * as path from 'path'
 import {
   addCustomCSS,
@@ -177,12 +177,12 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
 
   accountView.webContents.loadURL(gmailUrl)
 
-  accountView.webContents.on('dom-ready', () => {
+  accountView.webContents.addListener('dom-ready', () => {
     addCustomCSS(accountView)
     initCustomStyles(accountView)
   })
 
-  accountView.webContents.on('did-finish-load', async () => {
+  accountView.webContents.addListener('did-finish-load', async () => {
     if (accountView.webContents.getURL().includes('signin/rejected')) {
       const { response } = await dialog.showMessageBox({
         type: 'info',
@@ -206,7 +206,7 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     }
   })
 
-  accountView.webContents.on('will-navigate', (event, url) => {
+  accountView.webContents.addListener('will-navigate', (event: Event, url: string) => {
     // Allow navigation within Gmail
     if (url.startsWith(gmailUrl) || url.startsWith(googleAccountsUrl)) {
       return;
@@ -220,7 +220,7 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     return { action: 'deny' };
   });
 
-  accountView.webContents.on('will-redirect', (event, url) => {
+  accountView.webContents.addListener('will-redirect', (event: Event, url: string) => {
     // Sometimes Gmail is redirecting to the landing page instead of login.
     if (url.startsWith('https://www.google.com')) {
       event.preventDefault();
@@ -239,7 +239,7 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
   });
 
   // Handle any remaining new window attempts
-  accountView.webContents.on('new-window', (event, url) => {
+  accountView.webContents.addListener('new-window', (event: NewWindowEvent, url: string) => {
     event.preventDefault();
     openExternalUrl(url);
   });
