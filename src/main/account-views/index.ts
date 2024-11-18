@@ -158,9 +158,12 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     webPreferences: {
       partition: sessionPartitionKey,
       preload: preloadPath,
-      contextIsolation: false,
-      nodeIntegration: true,
-      webviewTag: true
+      contextIsolation: true,
+      nodeIntegration: false,
+      webviewTag: false,
+      webSecurity: true,
+      images: true,
+      javascript: true
     }
   })
 

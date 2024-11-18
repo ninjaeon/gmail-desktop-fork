@@ -1,12 +1,10 @@
 import { ipcRenderer as ipc } from 'electron'
 import { ConfigKey } from '../../config'
-import initDarkMode from './dark-mode'
 import elementReady = require('element-ready')
 import { initGmail } from './gmail'
 import { initUrlPreview } from './url-preview'
 
 initGmail()
-initDarkMode()
 initUrlPreview()
 
 function attachButtonListeners(): void {

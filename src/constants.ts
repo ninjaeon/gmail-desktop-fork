@@ -11,7 +11,7 @@ export const googleAccountsUrl = 'https://accounts.google.com'
 export const topElementHeight = 40 // Px
 
 // Keep in sync with `repository` in `package.json`
-export const gitHubRepoUrl = 'https://github.com/timche/gmail-desktop'
+export const gitHubRepoUrl = 'https://github.com/ninjaeon/gmail-desktop-fork'
 
 export const defaultAccountId = 'default'
 
