@@ -71,6 +71,7 @@
     "electron-util": "^0.14.2",
     "element-ready": "^5.0.0",
     "esbuild": "^0.9.7",
+    "eslint-plugin-ava": "^15.0.1",
     "framer-motion": "^7.10.3",
     "html-react-parser": "^4.2.10",
     "husky": "^5.2.0",
@@ -89,7 +90,7 @@
     "type-fest": "^0.21.3",
     "typescript": "^4.9.5",
     "write-json-file": "^4.3.0",
-    "xo": "^0.38.2"
+    "xo": "^0.59.3"
   },
   "lint-staged": {
     "*.{ts,tsx,js}": [

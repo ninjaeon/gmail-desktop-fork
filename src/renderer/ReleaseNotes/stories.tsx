@@ -1,9 +1,11 @@
 import React from 'react'
 import ReleaseNotes from '.'
+import { Meta } from '@storybook/react'
 
 export default {
-  title: 'ReleaseNotes'
-}
+  title: 'ReleaseNotes',
+  component: ReleaseNotes
+} as Meta
 
 export const Available = () => (
   <ReleaseNotes

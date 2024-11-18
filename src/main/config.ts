@@ -148,34 +148,28 @@ const config = new Store<TypedStore>({
   accessPropertiesByDotNotation: false,
   migrations: {
     '>=2.21.2': (store) => {
-      const hideRightSidebar: boolean | undefined = store.get(
-        'hideRightSidebar'
-      )
+      const hideRightSidebar = store.get(ConfigKey.HideRightSidebar)
 
       if (typeof hideRightSidebar === 'boolean') {
-        // @ts-expect-error
-        store.delete('hideRightSidebar')
+        store.delete(ConfigKey.HideRightSidebar)
       }
     },
     '>2.21.2': (store) => {
-      const overrideUserAgent: string | undefined = store.get(
-        'overrideUserAgent'
-      )
+      const overrideUserAgent = store.get(ConfigKey.OverrideUserAgent)
 
       if (typeof overrideUserAgent === 'string') {
         if (overrideUserAgent.length > 0) {
           store.set(ConfigKey.CustomUserAgent, overrideUserAgent)
         }
 
-        // @ts-expect-error
-        store.delete('overrideUserAgent')
+        store.delete(ConfigKey.OverrideUserAgent)
       }
     },
     '>3.0.0-alpha.2': (store) => {
-      const customUserAgent: string = store.get('customUserAgent')
+      const customUserAgent = store.get(ConfigKey.CustomUserAgent)
 
       if (customUserAgent === getPlatformUserAgentFix()) {
-        store.set('customUserAgent', '')
+        store.set(ConfigKey.CustomUserAgent, '')
       }
     },
     '>3.0.0-alpha.15': (store) => {
@@ -183,7 +177,6 @@ const config = new Store<TypedStore>({
 
       if (typeof notificationsSilent === 'boolean') {
         store.set(ConfigKey.NotificationsPlaySound, !notificationsSilent)
-        // @ts-expect-error
         store.delete('notificationsSilent')
       }
     },
@@ -192,12 +185,10 @@ const config = new Store<TypedStore>({
 
       if (typeof notificationsDisabled === 'boolean') {
         store.set(ConfigKey.NotificationsEnabled, !notificationsDisabled)
-        // @ts-expect-error
         store.delete('notificationsDisabled')
       }
     },
     '>3.0.0-fork.0': (store) => {
-      // Migration for fork version
       const accounts = store.get(ConfigKey.Accounts)
       if (Array.isArray(accounts)) {
         store.set(ConfigKey.Accounts, accounts)

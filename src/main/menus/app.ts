@@ -119,7 +119,7 @@ export function getAppMenu() {
               message: `${app.name}`,
               detail: `Version: ${app.getVersion()} (${config.get(
                 ConfigKey.ReleaseChannel
-              )})\n\nCreated by Tim Cheung <tim@cheung.io>\n\nCopyright © 2021 Tim Cheung`
+              )})\n\nCreated by Tim Cheung <tim@cheung.io>\n\nCopyright 2021 Tim Cheung`
             })
           }
         },
@@ -284,9 +284,6 @@ export function getAppMenu() {
                   }
                 }
               ]
-            },
-            {
-              type: 'separator'
             },
             {
               label: 'Default Mail Client',
