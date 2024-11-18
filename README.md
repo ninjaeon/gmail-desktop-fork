@@ -3,7 +3,7 @@
 **WARNING: This is an experimental fork of Gmail Desktop with AI-generated modifications that have not been manually reviewed. Use at your own risk.**
 
 This fork includes:
-- Updated Electron to version 27.1.0
+- Updated Electron to version 33.2.0 (from original 15.3.6)
 - Updated User Agent strings to Firefox 132.0
 - AI-generated code modifications that have not been manually reviewed or tested thoroughly
 
@@ -200,11 +200,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
 
-<!-- ALL-CONTRIBUTORS-LIST:END -->
-
 This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
 
 ## Disclaimer
 
 Gmail Desktop is a third-party app and not affiliated with Google.
-

@@ -1,7 +1,7 @@
 {
   "name": "gmail-desktop",
   "productName": "Gmail Desktop",
-  "version": "3.0.0-fork.2",
+  "version": "3.0.0-fork.3",
   "description": "Nifty Gmail desktop app",
   "private": true,
   "repository": {
@@ -62,8 +62,8 @@
     "darkreader": "^4.9.53",
     "del-cli": "^3.0.1",
     "domhandler": "^4.0.0",
-    "electron": "^27.1.0",
-    "electron-builder": "^24.4.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^24.13.3",
     "electron-context-menu": "^2.5.0",
     "electron-dl": "^3.2.0",
     "electron-log": "^4.3.2",
