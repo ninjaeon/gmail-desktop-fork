@@ -16,6 +16,7 @@ import { darkTheme } from '../../theme'
 import { mainWindowMinWidth } from '../../constants'
 
 let mainWindow: BrowserWindow | undefined
+let isInitialLaunch = true
 
 export function getMainWindow() {
   if (!mainWindow) {
@@ -32,14 +33,13 @@ export function showMainWindow() {
 
   if (mainWindow.isMinimized()) {
     mainWindow.restore()
-    return
   }
 
   mainWindow.show()
 }
 
 export function sendToMainWindow(channel: string, ...args: any[]) {
-  if (mainWindow) {
+  if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents) {
     mainWindow.webContents.send(channel, ...args)
   }
 }
@@ -47,191 +47,189 @@ export function sendToMainWindow(channel: string, ...args: any[]) {
 export function createMainWindow(): void {
   const lastWindowState = config.get(ConfigKey.LastWindowState)
 
-  mainWindow = new BrowserWindow({
-    title: app.name,
-    titleBarStyle:
-      config.get(ConfigKey.TitleBarStyle) === 'app' ? 'hiddenInset' : 'default',
-    frame: config.get(ConfigKey.TitleBarStyle) === 'system',
-    minWidth: mainWindowMinWidth,
-    width: lastWindowState.bounds.width,
-    minHeight: 200,
-    height: lastWindowState.bounds.height,
-    x: lastWindowState.bounds.x,
-    y: lastWindowState.bounds.y,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload', 'main-window.js')
-    },
-    show: !shouldLaunchMinimized(),
-    icon: is.linux
-      ? path.join(__dirname, '..', '..', 'static', 'icon.png')
-      : undefined,
-    darkTheme: nativeTheme.shouldUseDarkColors,
-    backgroundColor: nativeTheme.shouldUseDarkColors
-      ? darkTheme.bg[0]
-      : undefined
-  })
+  try {
+    mainWindow = new BrowserWindow({
+      title: app.name,
+      titleBarStyle:
+        config.get(ConfigKey.TitleBarStyle) === 'app' ? 'hiddenInset' : 'default',
+      frame: config.get(ConfigKey.TitleBarStyle) === 'system',
+      minWidth: mainWindowMinWidth,
+      width: lastWindowState.bounds.width,
+      minHeight: 200,
+      height: lastWindowState.bounds.height,
+      x: lastWindowState.bounds.x,
+      y: lastWindowState.bounds.y,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'preload', 'main-window.js')
+      },
+      show: false, // Changed to always start hidden initially
+      icon: is.linux
+        ? path.join(__dirname, '..', '..', 'static', 'icon.png')
+        : undefined,
+      darkTheme: nativeTheme.shouldUseDarkColors,
+      backgroundColor: nativeTheme.shouldUseDarkColors
+        ? darkTheme.bg[0]
+        : undefined
+    })
 
-  if (lastWindowState.fullscreen && !mainWindow.isFullScreen()) {
-    mainWindow.setFullScreen(lastWindowState.fullscreen)
-  }
+    if (!mainWindow) {
+      console.error('Failed to create main window')
+      return
+    }
 
-  if (lastWindowState.maximized && !mainWindow.isMaximized()) {
-    mainWindow.maximize()
-  }
+    if (lastWindowState.fullscreen && !mainWindow.isFullScreen()) {
+      mainWindow.setFullScreen(lastWindowState.fullscreen)
+    }
 
-  if (!is.macos) {
-    const hideMenuBar = config.get(ConfigKey.AutoHideMenuBar)
-    mainWindow.setMenuBarVisibility(!hideMenuBar)
-    mainWindow.autoHideMenuBar = hideMenuBar
-  }
+    if (lastWindowState.maximized && !mainWindow.isMaximized()) {
+      mainWindow.maximize()
+    }
 
-  mainWindow.loadFile(path.resolve(__dirname, indexHTML))
+    if (!is.macos) {
+      const hideMenuBar = config.get(ConfigKey.AutoHideMenuBar)
+      mainWindow.setMenuBarVisibility(!hideMenuBar)
+      mainWindow.autoHideMenuBar = hideMenuBar
+    }
 
-  mainWindow.on('close', (event) => {
-    // Workaround: Closing the main window when on full screen leaves a black screen
-    // https://github.com/electron/electron/issues/20263
-    if (is.macos && mainWindow?.isFullScreen()) {
-      mainWindow.once('leave-full-screen', () => {
+    mainWindow.loadFile(path.resolve(__dirname, indexHTML))
+
+    mainWindow.on('close', (event) => {
+      if (is.macos && mainWindow?.isFullScreen()) {
+        mainWindow?.once('leave-full-screen', () => {
+          mainWindow?.hide()
+        })
+        mainWindow?.setFullScreen(false)
+      }
+
+      if (!getIsQuittingApp() && mainWindow) {
+        event.preventDefault()
+        mainWindow?.blur()
         mainWindow?.hide()
-      })
-      mainWindow.setFullScreen(false)
-    }
+      }
+    })
 
-    if (!getIsQuittingApp() && mainWindow) {
-      event.preventDefault()
-      mainWindow.blur()
-      mainWindow.hide()
-    }
-  })
+    mainWindow.on('hide', () => {
+      toggleAppVisiblityTrayItem(false)
+    })
 
-  mainWindow.on('hide', () => {
-    toggleAppVisiblityTrayItem(false)
-  })
+    mainWindow.on('show', () => {
+      toggleAppVisiblityTrayItem(true)
+    })
 
-  mainWindow.on('show', () => {
-    toggleAppVisiblityTrayItem(true)
-  })
+    mainWindow.on('focus', () => {
+      const selectedAccountView = getSelectedAccountView()
+      if (selectedAccountView) {
+        selectedAccountView.webContents.focus()
+      }
+    })
 
-  mainWindow.on('focus', () => {
-    const selectedAccountView = getSelectedAccountView()
-    if (selectedAccountView) {
-      selectedAccountView.webContents.focus()
-    }
-  })
+    let debouncedUpdateAllAccountViewBounds: () => void
 
-  let debouncedUpdateAllAccountViewBounds: () => void
-
-  if (is.linux) {
-    debouncedUpdateAllAccountViewBounds = debounce(
-      updateAllAccountViewBounds,
-      200
-    )
-  }
-
-  mainWindow.on('resize', () => {
-    // When the window is getting maximized on Linux, the bounds of the
-    // main window are not updated until the maximizing animation is completed.
-    // A workaround is to wait 200 ms before updating the account views bounds.
-    // Not all Linux distros may have this animation, but it's a universal workaround
-    // and there's no way to know if there's an animation or not. Unfortunately the
-    // `resized` event is only available on macOS and Windows.
     if (is.linux) {
-      debouncedUpdateAllAccountViewBounds()
-    } else {
-      updateAllAccountViewBounds()
-    }
-  })
-
-  mainWindow.webContents.on('dom-ready', () => {
-    if (!shouldLaunchMinimized() && mainWindow) {
-      showMainWindow()
-    }
-  })
-
-  mainWindow.webContents.on('will-navigate', (event, url) => {
-    event.preventDefault()
-    openExternalUrl(url)
-  })
-
-  if (!is.macos) {
-    // The events `maximize` and `unmaximize` are not sent on Linux for some reason.
-    // Probably for a similar reason as above when handling the `resize` event
-    // where a maximize/unmaximize animation is happening.
-    if (is.linux) {
-      const debouncedIsMaximized = debounce(() => {
-        if (mainWindow) {
-          sendToMainWindow(
-            mainWindow.isMaximized() ? 'window:maximized' : 'window:unmaximized'
-          )
-        }
-      }, 200)
-
-      mainWindow.on('resize', debouncedIsMaximized)
-    } else {
-      mainWindow.on('maximize', () => {
-        sendToMainWindow('window:maximized')
-      })
-
-      mainWindow.on('unmaximize', () => {
-        sendToMainWindow('window:unmaximized')
-      })
+      debouncedUpdateAllAccountViewBounds = debounce(
+        updateAllAccountViewBounds,
+        200
+      )
     }
 
-    ipcMain.handle('window:is-maximized', () => {
-      // Similar reason as above.
+    mainWindow.on('resize', () => {
       if (is.linux) {
-        setTimeout(() => {
+        debouncedUpdateAllAccountViewBounds?.()
+      } else {
+        updateAllAccountViewBounds()
+      }
+    })
+
+    mainWindow.webContents.on('dom-ready', () => {
+      if (isInitialLaunch) {
+        if (!shouldLaunchMinimized()) {
+          mainWindow?.show()
+        } else {
+          // Ensure the window is hidden and the tray is properly updated
+          mainWindow?.hide()
+          toggleAppVisiblityTrayItem(false)
+        }
+        isInitialLaunch = false
+      }
+    })
+
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+      event.preventDefault()
+      openExternalUrl(url)
+    })
+
+    if (!is.macos) {
+      if (is.linux) {
+        const debouncedIsMaximized = debounce(() => {
           if (mainWindow) {
             sendToMainWindow(
-              mainWindow.isMaximized()
-                ? 'window:maximized'
-                : 'window:unmaximized'
+              mainWindow.isMaximized() ? 'window:maximized' : 'window:unmaximized'
             )
           }
         }, 200)
-      } else if (mainWindow) {
-        return mainWindow.isMaximized()
+
+        mainWindow.on('resize', debouncedIsMaximized)
+      } else {
+        mainWindow.on('maximize', () => {
+          sendToMainWindow('window:maximized')
+        })
+
+        mainWindow.on('unmaximize', () => {
+          sendToMainWindow('window:unmaximized')
+        })
       }
 
-      return false
-    })
+      ipcMain.handle('window:is-maximized', () => {
+        if (is.linux) {
+          setTimeout(() => {
+            if (mainWindow) {
+              sendToMainWindow(
+                mainWindow.isMaximized()
+                  ? 'window:maximized'
+                  : 'window:unmaximized'
+              )
+            }
+          }, 200)
+        } else if (mainWindow) {
+          return mainWindow.isMaximized()
+        }
 
-    ipcMain.on('window:minimize', () => {
-      if (mainWindow) {
-        mainWindow.minimize()
-      }
-    })
-
-    ipcMain.on('window:maximize', () => {
-      if (mainWindow) {
-        mainWindow.maximize()
-      }
-    })
-
-    ipcMain.on('window:unmaximize', () => {
-      if (mainWindow) {
-        mainWindow.unmaximize()
-      }
-    })
-
-    ipcMain.on('window:close', () => {
-      if (mainWindow) {
-        mainWindow.close()
-      }
-    })
-
-    ipcMain.handle(
-      'title-bar:is-enabled',
-      () => config.get(ConfigKey.TitleBarStyle) === 'app'
-    )
-
-    ipcMain.on('title-bar:open-app-menu', () => {
-      const appMenu = getAppMenu()
-      appMenu.popup({
-        window: mainWindow
+        return false
       })
-    })
+
+      ipcMain.on('window:minimize', () => {
+        mainWindow?.minimize()
+      })
+
+      ipcMain.on('window:maximize', () => {
+        mainWindow?.maximize()
+      })
+
+      ipcMain.on('window:unmaximize', () => {
+        mainWindow?.unmaximize()
+      })
+
+      ipcMain.on('window:close', () => {
+        if (mainWindow) {
+          mainWindow.close()
+        }
+      })
+
+      ipcMain.handle(
+        'title-bar:is-enabled',
+        () => config.get(ConfigKey.TitleBarStyle) === 'app'
+      )
+
+      ipcMain.on('title-bar:open-app-menu', () => {
+        const appMenu = getAppMenu()
+        appMenu.popup({
+          window: mainWindow
+        })
+      })
+    }
+  } catch (error) {
+    console.error('Error creating main window:', error)
   }
 }
