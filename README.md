@@ -5,7 +5,7 @@
 **⚠️ Mac and Linux Warning: Mac and Linux builds in this fork are completely untested. Windows is the only tested platform.**
 
 This fork includes:
-- Updated Electron to version 33.2.0 (from original 15.3.6)
+- Updated Electron to version 33.2.0 based on Chromium 130.0.6723.118 (from Electron 15.3.6 that is based on Chromium 94)
 - Updated User Agent strings to Firefox 132.0
 - AI-generated code modifications that have not been manually reviewed or tested thoroughly
 
