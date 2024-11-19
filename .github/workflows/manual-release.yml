@@ -1,0 +1,66 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: 'Commit SHA to create release from'
+        required: true
+        default: 'b9c3ba9'
+      version:
+        description: 'Version number'
+        required: true
+        default: '3.0.0-fork.5'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout specific commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit_sha }}
+          fetch-depth: 0
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          release_name: Release v${{ github.event.inputs.version }}
+          body: |
+            Release version ${{ github.event.inputs.version }} from commit ${{ github.event.inputs.commit_sha }}
+          draft: false
+          prerelease: false
+
+  build:
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            dist-target: windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Checkout specific commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.commit_sha }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Build and publish
+        run: npm run dist:${{ matrix.dist-target }} -- --publish always
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
