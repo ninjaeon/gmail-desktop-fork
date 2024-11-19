@@ -2,6 +2,8 @@
 
 **WARNING: This is an experimental fork of Gmail Desktop with AI-generated modifications that have not been manually reviewed. Use at your own risk.**
 
+**⚠️ Mac and Linux Warning: Mac and Linux builds in this fork are completely untested. Windows is the only tested platform.**
+
 This fork includes:
 - Updated Electron to version 33.2.0 (from original 15.3.6)
 - Updated User Agent strings to Firefox 132.0
