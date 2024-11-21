@@ -1,8 +1,11 @@
 {
   "extends": "xo-react",
-  "envs": ["node", "browser"],
+  "envs": ["node", "browser", "es2021"],
   "prettier": true,
   "space": true,
+  "parserOptions": {
+    "ecmaVersion": 2021
+  },
   "rules": {
     "unicorn/prevent-abbreviations": "off",
     "unicorn/prefer-module": "off",

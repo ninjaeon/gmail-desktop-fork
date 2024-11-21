@@ -143,11 +143,22 @@ export function createAccountView(accountId: string, setAsTopView?: boolean) {
     ? session.fromPartition(sessionPartitionKey)
     : session.defaultSession
 
+  console.log('[Gmail Desktop] Creating account view for:', accountId)
+  console.log('[Gmail Desktop] Session partition:', sessionPartitionKey)
+
   accountSession.setPermissionRequestHandler(
     (_webContents, permission, callback) => {
+      console.log('[Gmail Desktop] Permission request:', permission)
       if (permission === 'notifications') {
-        callback(false)
+        const notificationsEnabled = config.get(ConfigKey.NotificationsEnabled)
+        console.log('[Gmail Desktop] Notifications enabled in config:', notificationsEnabled)
+        // Allow notifications if they are enabled in the app settings
+        callback(notificationsEnabled)
+        return
       }
+      // Deny other permission requests by default
+      console.log('[Gmail Desktop] Denying permission:', permission)
+      callback(false)
     }
   )
 

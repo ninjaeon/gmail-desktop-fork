@@ -1,4 +1,5 @@
-export const domParser = new DOMParser()
+// Remove the global domParser instance as it's not needed
+// export const domParser = new DOMParser()
 
 export function getContentBySelector(
   node: Document | Element,

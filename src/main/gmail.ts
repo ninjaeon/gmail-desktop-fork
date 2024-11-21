@@ -104,34 +104,45 @@ export function newMailNotification(
 
 export function handleGmail() {
   ipcMain.on('gmail:unread-count', ({ sender }, unreadCount: number) => {
+    console.log('[Gmail Desktop] Received unread count:', unreadCount)
     const accountId = getAccountIdByViewId(sender.id)
     if (accountId) {
       unreadCounts[accountId] = unreadCount
 
       const totalUnreadCount = getTotalUnreadCount()
+      console.log('[Gmail Desktop] Total unread count:', totalUnreadCount)
 
       if (is.macos) {
         app.dock.setBadge(totalUnreadCount ? totalUnreadCount.toString() : '')
       }
 
       updateTrayUnreadStatus(totalUnreadCount)
-
       sendToMainWindow('unread-counts-updated', unreadCounts)
     }
   })
 
   if (Notification.isSupported()) {
+    console.log('[Gmail Desktop] Notifications are supported')
     ipcMain.on('gmail:new-mails', async (event, mails: Mail[]) => {
+      console.log('[Gmail Desktop] Received new mails event:', mails.length)
+      
+      const notificationsEnabled = config.get(ConfigKey.NotificationsEnabled)
+      console.log('[Gmail Desktop] Notifications enabled:', notificationsEnabled)
+      
       if (
-        !config.get(ConfigKey.NotificationsEnabled) ||
+        !notificationsEnabled ||
         (is.macos && (await isDoNotDisturbEnabled()))
       ) {
+        console.log('[Gmail Desktop] Notifications blocked by settings')
         return
       }
 
       for (const mail of mails) {
+        console.log('[Gmail Desktop] Creating notification for:', mail.subject)
         newMailNotification(mail, event.sender)
       }
     })
+  } else {
+    console.log('[Gmail Desktop] Notifications are NOT supported')
   }
 }

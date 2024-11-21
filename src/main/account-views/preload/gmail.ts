@@ -1,3 +1,50 @@
+// Add TypeScript types for Trusted Types
+declare global {
+  interface Window {
+    GM_INBOX_TYPE: 'CLASSIC' | 'SECTIONED'
+    trustedTypes?: {
+      createPolicy: (
+        name: string,
+        policy: {
+          createHTML?: (input: string) => string;
+          createScript?: (input: string) => string;
+          createScriptURL?: (input: string) => string;
+        }
+      ) => {
+        createHTML: (input: string) => TrustedHTML;
+        createScript: (input: string) => TrustedScript;
+        createScriptURL: (input: string) => TrustedScriptURL;
+      };
+      getPolicy: (name: string) => {
+        createHTML: (input: string) => TrustedHTML;
+        createScript: (input: string) => TrustedScript;
+        createScriptURL: (input: string) => TrustedScriptURL;
+      } | null;
+      defaultPolicy?: {
+        createHTML: (input: string) => TrustedHTML;
+      };
+    };
+  }
+}
+
+// Create a default Trusted Types policy for XML parsing
+if (window.trustedTypes) {
+  try {
+    window.trustedTypes.createPolicy('default', {
+      createHTML: (xmlString: string) => {
+        // Simple validation that it's actually XML
+        if (typeof xmlString !== 'string') {
+          throw new Error('Invalid input: not a string')
+        }
+        return xmlString
+      }
+    })
+    console.log('[Gmail Desktop] Created default Trusted Types policy')
+  } catch (error) {
+    console.error('[Gmail Desktop] Failed to create Trusted Types policy:', error)
+  }
+}
+
 import { ipcRenderer, IpcRendererEvent } from 'electron'
 import elementReady from 'element-ready'
 import { gmailUrl } from '../../../constants'
@@ -8,12 +55,6 @@ import {
   getDateBySelector,
   getNumberBySelector
 } from '../../utils/dom'
-
-declare global {
-  interface Window {
-    GM_INBOX_TYPE: 'CLASSIC' | 'SECTIONED'
-  }
-}
 
 const mailActions = {
   archive: 'rc_^i',
@@ -49,7 +90,24 @@ async function observeUnreadInbox() {
     unreadCountObserver = new MutationObserver(() => {
       getUnreadInbox()
     })
-    unreadCountObserver.observe(inboxParentElement, { childList: true })
+    unreadCountObserver.observe(inboxParentElement, {
+      subtree: true,
+      characterData: true,
+      childList: true
+    })
+
+    // Start polling for new emails
+    const pollInterval = setInterval(async () => {
+      await fetchNewMails(true)
+    }, 10_000) // Check every 10 seconds
+
+    // Initial check
+    void fetchNewMails(true)
+
+    // Clear interval on unload
+    window.addEventListener('unload', () => {
+      clearInterval(pollInterval)
+    })
   }
 }
 
@@ -58,31 +116,57 @@ async function fetchNewMails(sendUnreadCount?: boolean) {
   const label = isInboxSectioned ? '/^sq_ig_i_personal' : ''
   const version = ++feedVersion
 
-  const feedDocument = await gmailRequest(`feed/atom${label}?v=${version}`)
-    .then(async (response) => response.text())
-    .then((xml) => domParser.parseFromString(xml, 'text/xml'))
+  console.log('[Gmail Desktop] Checking for new emails...')
 
-  previousModifiedFeedDate = currentModifiedFeedDate
-  currentModifiedFeedDate = getDateBySelector(feedDocument, 'modified')
+  try {
+    const response = await gmailRequest(`feed/atom${label}?v=${version}`)
+    const xmlText = await response.text()
+    
+    let feedDocument: Document
+    
+    try {
+      // Use DOMParser with the default Trusted Types policy
+      feedDocument = new DOMParser().parseFromString(xmlText, 'text/xml')
+      
+      // Check for parsing errors
+      const parserError = feedDocument.querySelector('parsererror')
+      if (parserError) {
+        throw new Error(`XML parsing error: ${parserError.textContent}`)
+      }
+    } catch (parseError) {
+      console.error('[Gmail Desktop] Failed to parse XML:', parseError)
+      return
+    }
 
-  const isFeedModified = previousModifiedFeedDate !== currentModifiedFeedDate
+    previousModifiedFeedDate = currentModifiedFeedDate
+    currentModifiedFeedDate = getDateBySelector(feedDocument, 'modified')
 
-  if (!isFeedModified) {
-    return
-  }
+    const isFeedModified = previousModifiedFeedDate !== currentModifiedFeedDate
 
-  if (sendUnreadCount) {
-    const unreadCount = getNumberBySelector(feedDocument, 'fullcount')
-    ipcRenderer.send('gmail:unread-count', unreadCount)
-  }
+    if (!isFeedModified) {
+      console.log('[Gmail Desktop] No new emails found')
+      return
+    }
 
-  const newMails = parseNewMails(feedDocument)
+    if (sendUnreadCount) {
+      const unreadCount = getNumberBySelector(feedDocument, 'fullcount')
+      console.log('[Gmail Desktop] Unread count:', unreadCount)
+      ipcRenderer.send('gmail:unread-count', unreadCount)
+    }
 
-  // Don't notify about new mails on first start
-  if (isInitialNewMailsFetch) {
-    isInitialNewMailsFetch = false
-  } else {
-    ipcRenderer.send('gmail:new-mails', newMails)
+    const newMails = parseNewMails(feedDocument)
+    console.log('[Gmail Desktop] New emails found:', newMails.length)
+
+    // Don't notify about new mails on first start
+    if (isInitialNewMailsFetch) {
+      console.log('[Gmail Desktop] Initial fetch - skipping notifications')
+      isInitialNewMailsFetch = false
+    } else if (newMails.length > 0) {
+      console.log('[Gmail Desktop] Sending new mail notifications')
+      ipcRenderer.send('gmail:new-mails', newMails)
+    }
+  } catch (error) {
+    console.error('[Gmail Desktop] Error checking for new emails:', error)
   }
 }
 
@@ -206,8 +290,23 @@ function clickElement(selector: string) {
 }
 
 export function initGmail() {
-  window.addEventListener('DOMContentLoaded', () => {
-    observeUnreadInbox()
+  console.log('[Gmail Desktop] Initializing Gmail integration...')
+  
+  void (async () => {
+    // Request notification permission if not already granted
+    console.log('[Gmail Desktop] Current notification permission:', Notification.permission)
+    
+    if (Notification.permission !== 'granted') {
+      try {
+        console.log('[Gmail Desktop] Requesting notification permission...')
+        const permission = await Notification.requestPermission()
+        console.log('[Gmail Desktop] Notification permission result:', permission)
+      } catch (error: unknown) {
+        console.error('[Gmail Desktop] Failed to request notification permission:', error)
+      }
+    }
+
+    await observeUnreadInbox()
 
     ipcRenderer.on('gmail:archive-mail', async (_event, mailId: string) => {
       await sendMailAction(mailId, 'archive')
@@ -293,7 +392,7 @@ export function initGmail() {
     setInterval(() => {
       previousNewMails.clear()
     }, 1000 * 60 * 30)
-  })
+  })()
 
   window.addEventListener('unload', () => {
     unreadCountObserver?.disconnect()

@@ -6,7 +6,7 @@ on:
       commit_sha:
         description: 'Commit SHA to create release from'
         required: true
-        default: 'b9c3ba9'
+        default: 'main'
       version:
         description: 'Version number'
         required: true
@@ -16,11 +16,16 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout specific commit
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.commit_sha }}
           fetch-depth: 0
+
+      - name: Create Release Tag
+        run: |
+          git tag v${{ github.event.inputs.version }}
+          git push origin v${{ github.event.inputs.version }}
 
       - name: Create Release
         id: create_release
@@ -48,13 +53,14 @@ jobs:
         with:
           node-version: 18
 
-      - name: Checkout specific commit
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.commit_sha }}
+          ref: v${{ github.event.inputs.version }}
+          fetch-depth: 0
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Build
         run: npm run build
