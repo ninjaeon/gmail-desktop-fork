@@ -147,9 +147,14 @@ export function createMainWindow(): void {
         if (!shouldLaunchMinimized()) {
           mainWindow?.show()
         } else {
-          // Ensure the window is hidden and the tray is properly updated
-          mainWindow?.hide()
-          toggleAppVisiblityTrayItem(false)
+          if (config.get(ConfigKey.EnableTrayIcon)) {
+            // When tray is enabled, hide to tray
+            mainWindow?.hide()
+            toggleAppVisiblityTrayItem(false)
+          } else {
+            // When tray is disabled, minimize to taskbar
+            mainWindow?.minimize()
+          }
         }
         isInitialLaunch = false
       }
