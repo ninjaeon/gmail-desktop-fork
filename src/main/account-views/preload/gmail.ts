@@ -7,18 +7,12 @@ declare global {
         name: string,
         policy: {
           createHTML?: (input: string) => string;
-          createScript?: (input: string) => string;
-          createScriptURL?: (input: string) => string;
         }
       ) => {
         createHTML: (input: string) => TrustedHTML;
-        createScript: (input: string) => TrustedScript;
-        createScriptURL: (input: string) => TrustedScriptURL;
       };
       getPolicy: (name: string) => {
         createHTML: (input: string) => TrustedHTML;
-        createScript: (input: string) => TrustedScript;
-        createScriptURL: (input: string) => TrustedScriptURL;
       } | null;
       defaultPolicy?: {
         createHTML: (input: string) => TrustedHTML;
@@ -50,7 +44,6 @@ import elementReady from 'element-ready'
 import { gmailUrl } from '../../../constants'
 import { Mail } from '../../../types'
 import {
-  domParser,
   getContentBySelector,
   getDateBySelector,
   getNumberBySelector

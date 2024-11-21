@@ -25,6 +25,8 @@ jobs:
           node-version: 18
       - uses: actions/checkout@v4
       - run: npm ci
+      - if: matrix.os == 'macos-latest'
+        run: npm install --save-dev dmg-license
       - run: npm run build
       - name: Build and publish
         run: npm run dist:${{ matrix.dist-target }} -- --publish always
