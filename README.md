@@ -6,7 +6,8 @@
 
 This fork includes:
 - Updated Electron to version 33.2.0 based on Chromium 130.0.6723.118 (from Electron 15.3.6 that is based on Chromium 94)
-- Updated User Agent strings to Firefox 132.0
+- Updated User Agent string for "Use User Agent Fix" option to Firefox 132.0 (this setting doesn't seem to be nescessary at the moment)
+- Removed "Dark Reader" package so Dark Mode doesn't break icon colors
 - AI-generated code modifications that have not been manually reviewed or tested thoroughly
 
 **⚠️ Security Notice**: Due to the automated nature of the modifications and lack of manual code review, this fork may contain security vulnerabilities or bugs. It is not recommended for production use.
